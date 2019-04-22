@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++17 -Wall -g -O0
+CXXFLAGS=-std=c++17 -Wall -g -O3
 
 persist_vector: persist_vector.o
 	$(CXX) -o $@ $<

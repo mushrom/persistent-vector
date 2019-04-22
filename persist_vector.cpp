@@ -75,39 +75,19 @@ class pvector {
 		return ret;
 	}
 
-	nodeptr insert(nodeptr foo, std::size_t idx, int level, const T& thing, bool mut=true) {
+	nodeptr insert(nodeptr foo, std::size_t idx, int level, const T& thing) {
 		nodeptr ret = nullptr;
 
-		bool can_mut = mut && foo != nullptr && foo.unique();
-
+		/*
 		std::cout << "insert(): "
 			<< "index: " << idx
 			<< ", level: " << level
-			<< ", usage: " << foo.use_count()
-			<< ", can_mut: " << can_mut << std::endl;
+			<< ", usage: " << foo.use_count() << std::endl;
+			*/
 
 		if (level == 1) {
 			//leaf *temp = dynamic_cast<leaf*>(foo.get());
 			leaf *temp = (leaf*)(foo.get());
-			leaf *asdf = nullptr;
-			//leaf *asdf = new leaf();
-
-			if (can_mut) {
-				asdf = temp;
-				ret = foo;
-
-			} else {
-				asdf = new leaf();
-				ret = nodeptr(asdf);
-
-				if (temp) {
-					for (unsigned i = 0; i < 1 << NODE_BITS; i++) {
-						asdf->values[i] = temp->values[i];
-					}
-				}
-			}
-
-			/*
 			leaf *asdf = new leaf();
 			ret = nodeptr(asdf);
 
@@ -116,57 +96,22 @@ class pvector {
 					asdf->values[i] = temp->values[i];
 				}
 			}
-			*/
-
-			std::cout << "insert(): level 1: temp: " << temp << std::endl;
-			std::cout << "insert(): level 1: ret: " << ret << std::endl;
-			std::cout << "insert(): level 1: asdf: " << asdf << std::endl;;
 
 			asdf->values[key(idx, level)] = thing;
 
 		} else {
-			//internal *temp = dynamic_cast<internal*>(foo.get());
 			internal *temp = (internal*)(foo.get());
-			//internal *asdf = new internal();
-			internal *asdf = nullptr;
+			internal *asdf = new internal();
+			ret = nodeptr(asdf);
 
-			if (can_mut) {
-				std::cout << "insert(): we're here" << std::endl;
-				asdf = temp;
-				ret = foo;
-
-			} else {
-				asdf = new internal();
-				ret = nodeptr(asdf);
-
-				for (unsigned i = 0; i < 1 << NODE_BITS; i++) {
-					asdf->ptrs[i] = temp? temp->ptrs[i] : nullptr;
-				}
+			for (unsigned i = 0; i < 1 << NODE_BITS; i++) {
+				asdf->ptrs[i] = temp? temp->ptrs[i] : nullptr;
 			}
 
-			std::cout << "insert(): can mut: " << can_mut << std::endl;;
-			std::cout << "insert(): temp: " << temp << std::endl;;
-			std::cout << "insert(): asdf: " << asdf << std::endl;;
-			std::cout << "insert(): asdf v2: " << asdf->ptrs[key(idx, level)] << std::endl;;
-
-			//nodeptr next = asdf->ptrs[key(idx, level)];
-			//std::cout << "insert(): next: " << next << std::endl;;
-			//asdf->ptrs[key(idx, level)] = insert(next, idx, level - 1, thing, can_mut);
-			//asdf->ptrs[key(idx, level)] = insert(asdf->ptrs[key(idx, level)], idx, level - 1, thing, can_mut);
-
-			if (can_mut) {
-				asdf->ptrs[key(idx, level)] = insert(std::move(asdf->ptrs[key(idx, level)]), idx, level - 1, thing, can_mut);
-			} else {
-				asdf->ptrs[key(idx, level)] = insert(asdf->ptrs[key(idx, level)], idx, level - 1, thing, can_mut);
-			}
-
-			std::cout << "insert(): now have: " << asdf->ptrs[key(idx, level)] << std::endl;;
-			std::cout << "insert(): ret: " << ret << std::endl;
-			std::cout << "insert(): asdf: " << asdf << std::endl;;
-			std::cout << "got here" << std::endl;;
+			nodeptr next = asdf->ptrs[key(idx, level)];
+			asdf->ptrs[key(idx, level)] = insert(next, idx, level - 1, thing);
 		}
 
-		std::cout << "returning" << std::endl;;
 		return ret;
 	}
 
@@ -201,11 +146,9 @@ void pvector<T>::set(std::size_t idx, const T& thing) {
 	}
 
 	//std::cout << "set(): got here" << std::endl;
-	//root = pad(std::move(root), idx_level, size_level);
 	root = pad(root, idx_level, size_level);
 	//std::cout << "set(): and here" << std::endl;
-	//root = insert(root, idx, base_log(elements), thing);
-	root = insert(std::move(root), idx, base_log(elements), thing);
+	root = insert(root, idx, base_log(elements), thing);
 }
 
 template <class T>
@@ -269,12 +212,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::cout << "hmmmmst?" << std::endl;
-	meh[1024+len] = 1234;
+	meh[1337*len] = 1234;
 	//meh[2*len] = 1234;
 	std::cout << "got here" << std::endl;
 	std::cout << "meh: " << meh.size()
 		<< ", asdf: " << asdf.size()
-		<< ", value: " << meh[1024+len]
+		<< ", value: " << meh[1337*len]
 		<< std::endl;
 
 	for (unsigned i = 0; i < len; i++) {
@@ -303,6 +246,6 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "seems good: " << outsum << " == " << insum << " == " << (outsum == insum) << std::endl;
 
-	//getchar();
+	getchar();
 	return 0;
 }
