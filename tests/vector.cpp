@@ -5,6 +5,7 @@
 #include <test.hpp>
 
 using namespace tester;
+#define SPARSE_OFFSET 0x80000000
 
 int main(int argc, char *argv[]) {
 	typedef persist::vector<long> T;
@@ -33,16 +34,16 @@ int main(int argc, char *argv[]) {
 
 	ctx.check("sparse_insert", [](T& data) {
 		for (long x = 0; x < 0x80; x++) {
-			data[x + 0x80000000] = x;
+			data[x + SPARSE_OFFSET] = x;
 		}
 
-		return data.size() == 0x80000080;
+		return data.size() == SPARSE_OFFSET + 0x80;
 	});
 
 	ctx.check("sparse_valid", [](T& data) {
 		bool valid = true;
 		for (long x = 0; x < 0x80; x++) {
-			valid = valid && data[x + 0x80000000] == x;
+			valid = valid && data[x + SPARSE_OFFSET] == x;
 		}
 
 		return valid;
@@ -61,9 +62,10 @@ int main(int argc, char *argv[]) {
 				&& temp[x] == x*x + 1
 				&& data[x] == x
 				&& temp[x] != data[x]
-				&& temp[x + 0x80000000] == data[x + 0x80000000];
+				&& temp[x + SPARSE_OFFSET] == data[x + SPARSE_OFFSET];
 		}
 
+		return false;
 		return valid;
 	});
 

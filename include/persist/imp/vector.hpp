@@ -3,6 +3,74 @@
 namespace persist {
 
 template <typename T>
+class vector<T>::value {
+	public:
+		virtual bool is_leaf() = 0;
+};
+
+template <typename T>
+class vector<T>::internal : public vector<T>::value {
+	public:
+		virtual bool is_leaf() { return false; };
+		nodeptr ptrs[1 << NODE_BITS] = {nullptr};
+};
+
+template <typename T>
+class vector<T>::leaf : public vector<T>::value {
+	public:
+		virtual bool is_leaf() { return true; };
+		T values[1 << NODE_BITS];
+};
+
+template <typename T>
+class vector<T>::reference {
+	public:
+		reference(vector *p, std::size_t idx) {
+			parent = p;
+			index = idx;
+		}
+
+		const T& operator=(const T& other) {
+			parent->set(index, other);
+			return other;
+		}
+
+		operator T(){
+			return parent->get(index);
+		}
+
+	private:
+		vector *parent = nullptr;
+		std::size_t index = 0;
+};
+
+template <typename T>
+T& vector<T>::operator=(const T& other) {
+	elements = other.elements;
+	root = other.root;
+}
+
+template <typename T>
+std::size_t vector<T>::size(void) {
+	return elements;
+};
+
+template <typename T>
+const T& vector<T>::operator[](std::size_t idx) const {
+	return get(idx);
+};
+
+template <typename T>
+typename vector<T>::reference vector<T>::operator[](std::size_t idx) {
+	return reference(this, idx);
+}
+
+template <typename T>
+void vector<T>::push_back(T datum) {
+	set(elements, datum);
+}
+
+template <typename T>
 typename vector<T>::nodeptr
 vector<T>::insert(vector<T>::nodeptr foo,
                   std::size_t idx,
@@ -76,6 +144,23 @@ vector<T>::remove(nodeptr foo,
 }
 
 template <typename T>
+std::size_t vector<T>::base_log(std::size_t n) {
+	std::size_t ret = 0;
+
+	while (n) {
+		ret += 1;
+		n >>= NODE_BITS;
+	}
+
+	return ret;
+}
+
+template <typename T>
+unsigned vector<T>::key(std::size_t index, int level) {
+	return (index >> (NODE_BITS * (level - 1))) & MASK;
+}
+
+template <typename T>
 void vector<T>::set(std::size_t idx, const T& thing) {
 	std::size_t idx_level = base_log(idx + 1);
 	std::size_t size_level = base_log(elements);
@@ -113,11 +198,6 @@ const T& vector<T>::get(std::size_t idx) {
 	}
 
 	return ((leaf*)temp.get())->values[key(idx, level)];
-}
-
-template <typename T>
-void vector<T>::push_back(T datum) {
-	set(elements, datum);
 }
 
 /*
