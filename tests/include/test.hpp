@@ -11,7 +11,7 @@ class context {
 		typedef bool (*test_func)(T& thing);
 
 		context(std::string n,
-		        test_constructor cn,
+		        test_constructor cn = default_cons,
 		        uint32_t s = 1234)
 			: name(n), seed(s)
 		{
@@ -19,6 +19,7 @@ class context {
 		}
 
 		void check(std::string name, test_func fn);
+		static T default_cons(uint32_t seed) { return T(); };
 
 		T data;
 		std::string name;

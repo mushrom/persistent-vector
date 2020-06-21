@@ -10,7 +10,7 @@ using namespace tester;
 int main(int argc, char *argv[]) {
 	typedef persist::vector<long> T;
 
-	context<T> ctx("vector", [](uint32_t u){ return T(); });
+	context<T> ctx("vector");
 	ctx.check("insert", [](T& data){
 		for (long x = 0; x < 128; x++) {
 			data.push_back(x);
@@ -65,7 +65,6 @@ int main(int argc, char *argv[]) {
 				&& temp[x + SPARSE_OFFSET] == data[x + SPARSE_OFFSET];
 		}
 
-		return false;
 		return valid;
 	});
 
