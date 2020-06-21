@@ -1,2 +1,6 @@
 persist_vector
 *.o
+*.test
+*.result
+*.d
+*.temp
